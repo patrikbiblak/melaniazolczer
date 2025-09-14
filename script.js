@@ -749,7 +749,13 @@ function switchLanguage(lang) {
     elements.forEach(element => {
         const text = element.getAttribute(`data-${lang}`);
         if (text) {
-            element.textContent = text;
+            // Check if the text contains HTML tags
+            if (text.includes('<br>') || text.includes('<') || text.includes('>')) {
+                element.innerHTML = text;
+                console.log('Updated element with HTML:', element, 'Text:', text);
+            } else {
+                element.textContent = text;
+            }
         }
     });
     
@@ -768,6 +774,15 @@ function switchLanguage(lang) {
         const text = option.getAttribute(`data-${lang}`);
         if (text) {
             option.textContent = text;
+        }
+    });
+    
+    // Update map section content
+    const mapElements = document.querySelectorAll('[data-en][data-hu]');
+    mapElements.forEach(element => {
+        const text = element.getAttribute(`data-${lang}`);
+        if (text) {
+            element.textContent = text;
         }
     });
     
@@ -797,8 +812,8 @@ function switchLanguage(lang) {
 
 // Initialize language switching
 document.addEventListener('DOMContentLoaded', () => {
-    // Check for saved language preference
-    const savedLanguage = localStorage.getItem('preferredLanguage') || 'en';
+    // Check for saved language preference, default to Hungarian
+    const savedLanguage = localStorage.getItem('preferredLanguage') || 'hu';
     switchLanguage(savedLanguage);
     
     // Add event listeners to language buttons
@@ -834,4 +849,17 @@ document.addEventListener('DOMContentLoaded', () => {
     
     showPageLoading();
     addCursorTrail();
+    initializeMap();
 });
+
+// Initialize map loading state
+function initializeMap() {
+    const mapContainer = document.querySelector('.map-container');
+    const mapIframe = document.querySelector('.map-iframe');
+    
+    if (mapContainer && mapIframe) {
+        mapIframe.addEventListener('load', () => {
+            mapContainer.classList.add('loaded');
+        });
+    }
+}
