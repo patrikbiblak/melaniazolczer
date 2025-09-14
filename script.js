@@ -432,7 +432,7 @@ if (!document.querySelector('#ripple-styles')) {
     document.head.appendChild(style);
 }
 
-// Statistics counter animation
+// Enhanced statistics counter animation
 function animateCounters() {
     const counters = document.querySelectorAll('.stat h3');
     
@@ -440,15 +440,60 @@ function animateCounters() {
         const target = parseInt(counter.textContent.replace(/\D/g, ''));
         const suffix = counter.textContent.replace(/\d/g, '');
         let current = 0;
-        const increment = target / 50;
+        const duration = 2000; // 2 seconds
+        const increment = target / (duration / 16); // 60fps
         
         const updateCounter = () => {
             if (current < target) {
                 current += increment;
-                counter.textContent = Math.ceil(current) + suffix;
+                const displayValue = Math.min(Math.ceil(current), target);
+                counter.textContent = displayValue + suffix;
                 requestAnimationFrame(updateCounter);
             } else {
                 counter.textContent = target + suffix;
+            }
+        };
+        
+        // Add a small delay for staggered effect
+        setTimeout(updateCounter, Math.random() * 500);
+    });
+}
+
+// Enhanced counter animation with easing and visual effects
+function animateCountersWithEasing() {
+    const counters = document.querySelectorAll('.stat h3');
+    
+    counters.forEach((counter, index) => {
+        const target = parseInt(counter.textContent.replace(/\D/g, ''));
+        const suffix = counter.textContent.replace(/\d/g, '');
+        let current = 0;
+        const duration = 2000; // 2 seconds
+        const startTime = Date.now() + (index * 200); // Staggered start
+        
+        const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+        
+        // Add counting class for visual effect
+        counter.classList.add('counting');
+        
+        const updateCounter = () => {
+            const elapsed = Date.now() - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const easedProgress = easeOutCubic(progress);
+            
+            current = Math.floor(target * easedProgress);
+            counter.textContent = current + suffix;
+            
+            if (progress < 1) {
+                requestAnimationFrame(updateCounter);
+            } else {
+                counter.textContent = target + suffix;
+                counter.classList.remove('counting');
+                counter.classList.add('completed');
+                
+                // Remove completed class after animation
+                setTimeout(() => {
+                    counter.classList.remove('completed');
+                }, 600);
             }
         };
         
@@ -456,20 +501,102 @@ function animateCounters() {
     });
 }
 
+// Store original counter values
+let originalCounterValues = {};
+
+// Store original counter values on page load
+function storeOriginalValues() {
+    const counters = document.querySelectorAll('.stat h3');
+    counters.forEach((counter, index) => {
+        const target = parseInt(counter.textContent.replace(/\D/g, ''));
+        const suffix = counter.textContent.replace(/\d/g, '');
+        originalCounterValues[index] = { target, suffix };
+    });
+}
+
+// Reset counters to 0 for animation
+function resetCounters() {
+    const counters = document.querySelectorAll('.stat h3');
+    counters.forEach((counter, index) => {
+        if (originalCounterValues[index]) {
+            counter.textContent = '0' + originalCounterValues[index].suffix;
+            counter.classList.remove('counting', 'completed');
+        }
+    });
+}
+
+// Enhanced counter animation with easing and visual effects
+function animateCountersWithEasing() {
+    const counters = document.querySelectorAll('.stat h3');
+    
+    counters.forEach((counter, index) => {
+        if (!originalCounterValues[index]) {
+            console.log('No original value for counter', index);
+            return;
+        }
+        
+        const { target, suffix } = originalCounterValues[index];
+        console.log('Animating counter', index, 'to', target);
+        
+        let current = 0;
+        const duration = 2000; // 2 seconds
+        const startTime = Date.now() + (index * 200); // Staggered start
+        
+        const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+        
+        // Add counting class for visual effect
+        counter.classList.add('counting');
+        
+        const updateCounter = () => {
+            const elapsed = Date.now() - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const easedProgress = easeOutCubic(progress);
+            
+            current = Math.floor(target * easedProgress);
+            counter.textContent = current + suffix;
+            
+            if (progress < 1) {
+                requestAnimationFrame(updateCounter);
+            } else {
+                counter.textContent = target + suffix;
+                counter.classList.remove('counting');
+                counter.classList.add('completed');
+                
+                // Remove completed class after animation
+                setTimeout(() => {
+                    counter.classList.remove('completed');
+                }, 600);
+            }
+        };
+        
+        updateCounter();
+    });
+}
+
+// Simple test function to verify counters work
+function testCounters() {
+    console.log('Testing counters...');
+    const counters = document.querySelectorAll('.stat h3');
+    console.log('Found counters:', counters.length);
+    counters.forEach((counter, index) => {
+        console.log(`Counter ${index}:`, counter.textContent);
+    });
+    console.log('Original values:', originalCounterValues);
+}
+
 // Trigger counter animation when hero section is visible
 const heroObserver = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
         if (entry.isIntersecting) {
-            animateCounters();
+            resetCounters();
+            setTimeout(() => {
+                animateCountersWithEasing();
+            }, 100);
             heroObserver.unobserve(entry.target);
         }
     });
 }, { threshold: 0.5 });
 
-const heroSection = document.querySelector('.hero');
-if (heroSection) {
-    heroObserver.observe(heroSection);
-}
 
 // Enhanced section reveal animations
 const sectionObserver = new IntersectionObserver((entries) => {
@@ -681,6 +808,29 @@ document.addEventListener('DOMContentLoaded', () => {
             switchLanguage(lang);
         });
     });
+    
+    // Store original counter values
+    storeOriginalValues();
+    
+    // Test counters
+    setTimeout(() => {
+        testCounters();
+    }, 1000);
+    
+    // Add manual test trigger (for debugging)
+    window.testCounterAnimation = () => {
+        console.log('Manual test triggered');
+        resetCounters();
+        setTimeout(() => {
+            animateCountersWithEasing();
+        }, 100);
+    };
+    
+    // Initialize hero observer for counter animation
+    const heroSection = document.querySelector('.hero');
+    if (heroSection) {
+        heroObserver.observe(heroSection);
+    }
     
     showPageLoading();
     addCursorTrail();

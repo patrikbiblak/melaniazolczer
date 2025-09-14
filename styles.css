@@ -249,6 +249,31 @@ body {
     font-weight: 700;
     color: var(--primary-blue);
     margin-bottom: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.stat h3.counting {
+    transform: scale(1.1);
+    text-shadow: 0 0 10px rgba(37, 99, 235, 0.3);
+}
+
+.stat h3.completed {
+    animation: counterComplete 0.6s ease-out;
+}
+
+@keyframes counterComplete {
+    0% {
+        transform: scale(1.1);
+        text-shadow: 0 0 10px rgba(37, 99, 235, 0.3);
+    }
+    50% {
+        transform: scale(1.2);
+        text-shadow: 0 0 20px rgba(37, 99, 235, 0.6);
+    }
+    100% {
+        transform: scale(1);
+        text-shadow: none;
+    }
 }
 
 .stat p {
